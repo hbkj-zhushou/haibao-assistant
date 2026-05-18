@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海宝车机助手 - 本地模式</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; }
+        header h1 { font-size: 2.5em; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        header p { opacity: 0.9; }
+        .logo { width: 64px; height: 64px; border-radius: 12px; }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .status-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #ccc; }
+        .status-dot.connected { background: #28a745; }
+        .status-dot.error { background: #dc3545; }
+        .status-text { font-weight: 600; color: #333; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
+        .device-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .info-item { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .info-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .info-value { font-size: 18px; font-weight: 600; color: #333; }
+        .output-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        .output-line { margin: 2px 0; }
+        .output-line::before { content: '$ '; color: #6a9955; }
+        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .input-group { display: flex; gap: 10px; margin: 15px 0; }
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .input-group input:focus { outline: none; border-color: #667eea; }
+        .file-list, .pkg-list { max-height: 300px; overflow-y: auto; }
+        .file-item, .pkg-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .file-item:hover, .pkg-item:hover { background: #f8f9fa; }
+        .file-icon, .pkg-icon {
+            width: 40px; height: 40px;
+            background: #667eea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .file-name, .pkg-name { flex: 1; font-weight: 500; word-break: break-all; }
+        .pkg-actions { display: flex; gap: 5px; }
+        .pkg-actions button { padding: 5px 10px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .btn-uninstall { background: #dc3545; color: white; }
+        .screen-preview {
+            text-align: center;
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .screen-preview img { max-width: 100%; max-height: 400px; border-radius: 8px; cursor: crosshair; }
+        .loading { color: #666; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+        .quick-apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .quick-app-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-app-btn:hover { border-color: #667eea; background: #f0f0ff; transform: translateY(-2px); }
+        .quick-app-btn .app-icon { font-size: 32px; margin-bottom: 8px; }
+        .quick-app-btn .app-icon-img { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; margin-bottom: 8px; background: #f0f0f0; }
+        .quick-app-btn .app-name { font-size: 14px; font-weight: 600; color: #333; text-align: center; word-break: break-all; }
+        .quick-app-btn .app-package { font-size: 11px; color: #888; margin-top: 5px; text-align: center; word-break: break-all; }
+        footer { text-align: center; color: white; opacity: 0.7; margin-top: 20px; }
+
+        /* 免责声明弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-content h2 {
+            color: #dc3545;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-content .disclaimer-text {
+            line-height: 1.8;
+            color: #333;
+            margin: 15px 0;
+        }
+        .modal-content .disclaimer-text p {
+            margin: 10px 0;
+        }
+        .modal-content .btn-agree {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .modal-content .btn-agree:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+        }
+
+        /* Toast 通知系统 */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: toastIn 0.3s ease;
+            max-width: 350px;
+            word-break: break-all;
+        }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.info { background: #667eea; }
+        .toast.warning { background: #ffc107; color: #333; }
+        @keyframes toastIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* 确认对话框 */
+        .confirm-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+        .confirm-dialog {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .confirm-dialog h3 { margin-bottom: 15px; color: #333; }
+        .confirm-dialog p { color: #666; margin-bottom: 20px; line-height: 1.5; }
+        .confirm-dialog .btn-group { justify-content: flex-end; margin: 0; }
+    </style>
+</head>
+<body>
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 免责声明弹窗 -->
+    <div class="modal-overlay" id="disclaimerModal">
+        <div class="modal-content">
+            <h2>⚠️ 免责声明</h2>
+            <div class="disclaimer-text">
+                <p><strong>⚠️ 警示：</strong>刷机有风险，请严格按照教程操作，不要修改车机其他内容，否则后果自负。</p>
+                <p><strong>重要说明：</strong>本内容仅在车机原系统上加装第三方管理工具，不对原系统修改，不影响终身质保；如需恢复，请执行恢复出厂设置操作。</p>
+                <p><strong>适用范围：</strong>捷途旅行者、山海T2等车型，其他车型请自测。</p>
+                <p><strong>特别提醒：</strong>每个车型的口令可能有多种算法，如果第一个不对，请尝试其他口令。</p>
+                <p><strong>版权声明：</strong>本项目仅为个人学习研究使用，请不要进行商业用途或营利使用。</p>
+            </div>
+            <button class="btn-agree" data-action="agree-disclaimer">我已阅读并同意</button>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer" style="display:none;">
+        <header>
+            <h1><img src="logo.png" alt="logo" class="logo">海宝车机助手</h1>
+            <p>抖音@捷途闯山海，联系QQ: 386689969</p>
+        </header>
+
+        <div class="card">
+            <div class="status-bar">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-text" id="statusText">正在连接服务...</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" data-action="connect">连接服务器</button>
+                <button class="btn btn-secondary" data-action="refresh-devices">刷新设备</button>
+            </div>
+        </div>
+
+        <div class="card" id="deviceCard" style="display:none;">
+            <h3>已连接设备</h3>
+            <div class="device-info">
+                <div class="info-item"><div class="info-label">设备型号</div><div class="info-value" id="devModel">-</div></div>
+                <div class="info-item"><div class="info-label">Android版本</div><div class="info-value" id="devVersion">-</div></div>
+                <div class="info-item"><div class="info-label">品牌</div><div class="info-value" id="devBrand">-</div></div>
+                <div class="info-item"><div class="info-label">序列号</div><div class="info-value" id="devSerial">-</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="shell">Shell命令</button>
+                <button class="tab-btn" data-tab="apk">APK管理</button>
+                <button class="tab-btn" data-tab="files">文件管理</button>
+                <button class="tab-btn" data-tab="screen">屏幕控制</button>
+                <button class="tab-btn" data-tab="launch">一键启动</button>
+                <button class="tab-btn" data-tab="control">设备控制</button>
+            </div>
+
+            <!-- Shell -->
+            <div class="tab-content active" id="tab-shell">
+                <h4>执行ADB命令</h4>
+                <div class="input-group">
+                    <input type="text" id="shellInput" placeholder="输入命令，如: ls /sdcard">
+                    <button class="btn btn-primary" data-action="exec-shell">执行</button>
+                </div>
+                <div class="output-box" id="shellOutput">
+                    <div class="output-line">欢迎使用海宝车机助手</div>
+                    <div class="output-line" style="color:#888">连接服务器后即可执行ADB命令</div>
+                </div>
+            </div>
+
+            <!-- APK管理 -->
+            <div class="tab-content" id="tab-apk">
+                <h4>APK管理</h4>
+                <div class="btn-group">
+                    <button class="btn btn-success" data-action="install-apk">安装APK</button>
+                    <button class="btn btn-secondary" data-action="list-packages">已安装应用</button>
+                </div>
+                <input type="file" id="apkFile" accept=".apk" style="display:none">
+                <div class="progress-bar" id="installProgress" style="display:none"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+                <div class="pkg-list" id="pkgList"><p class="loading">点击"已安装应用"查看列表</p></div>
+            </div>
+
+            <!-- 文件管理 -->
+            <div class="tab-content" id="tab-files">
+                <h4>文件管理</h4>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" data-action="refresh-files">刷新</button>
+                    <button class="btn btn-secondary" data-action="go-back">返回上级</button>
+                </div>
+                <div class="info-label" style="margin:10px 0">当前路径: <span id="currentPath">/sdcard</span></div>
+                <div class="file-list" id="fileList"><p class="loading">连接后点击刷新查看文件</p></div>
+                <div class="btn-group" style="margin-top:15px">
+                    <button class="btn btn-primary" data-action="upload-file">上传文件</button>
+                </div>
+                <input type="file" id="uploadFile" style="display:none">
+            </div>
+
+            <!-- 屏幕控制 -->
+            <div class="tab-content" id="tab-screen">
+                <h4>实时画面</h4>
+                <div class="screen-preview" id="screenPreview">
+                    <p style="color:#888">点击"开始预览"获取设备屏幕</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" data-action="start-preview">开始预览</button>
+                    <button class="btn btn-secondary" data-action="stop-preview">停止预览</button>
+                    <button class="btn btn-secondary" data-action="download-screenshot">下载截图</button>
+                </div>
+                <label style="margin-top:10px;display:flex;align-items:center;gap:8px">
+                    <input type="checkbox" id="autoRefresh" checked> 自动刷新(2秒)
+                </label>
+                <p style="color:#888;font-size:12px;margin-top:15px">提示: 直接点击画面上的位置即可操作设备</p>
+            </div>
+
+            <!-- 一键启动 -->
+            <div class="tab-content" id="tab-launch">
+                <h4>一键启动应用</h4>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" data-action="load-launch-apps">刷新列表</button>
+                </div>
+                <div class="quick-apps-grid" id="quickAppsGrid">
+                    <p class="loading">点击"刷新列表"获取可启动的应用</p>
+                </div>
+                <h4 style="margin-top:25px">自定义启动</h4>
+                <div class="input-group">
+                    <input type="text" id="launchPackage" placeholder="输入包名，如: com.android.settings">
+                    <button class="btn btn-primary" data-action="launch-app">启动</button>
+                </div>
+            </div>
+
+            <!-- 设备控制 -->
+            <div class="tab-content" id="tab-control">
+                <h4>设备控制</h4>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" data-action="control-device" data-param="reboot">重启</button>
+                    <button class="btn btn-secondary" data-action="control-device" data-param="recovery">重启到Recovery</button>
+                    <button class="btn btn-secondary" data-action="control-device" data-param="bootloader">重启到Bootloader</button>
+                    <button class="btn btn-danger" data-action="control-device" data-param="shutdown">关机</button>
+                </div>
+                <h4 style="margin-top:20px">日志</h4>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" data-action="show-logcat">查看日志</button>
+                </div>
+                <div class="output-box" id="logcatBox" style="display:none;max-height:200px"><pre id="logcatContent"></pre></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>海宝车机助手 | 抖音@捷途闯山海 | QQ: 386689969</p>
+        </footer>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ========== 配置常量 ==========
+        const CONFIG = {
+            API_BASE: 'http://127.0.0.1:8888',
+            AUTO_REFRESH_INTERVAL: 2000,
+            SCREENSHOT_RETRY: 3,
+            MAX_PACKAGES_DISPLAY: 50,
+            TOAST_DURATION: 3000,
+        };
+
+        // ========== DOM ID 常量 ==========
+        const DOM_IDS = {
+            TOAST_CONTAINER: 'toastContainer',
+            DISCLAIMER_MODAL: 'disclaimerModal',
+            MAIN_CONTAINER: 'mainContainer',
+            STATUS_DOT: 'statusDot',
+            STATUS_TEXT: 'statusText',
+            DEVICE_CARD: 'deviceCard',
+            DEV_MODEL: 'devModel',
+            DEV_VERSION: 'devVersion',
+            DEV_BRAND: 'devBrand',
+            DEV_SERIAL: 'devSerial',
+            SHELL_INPUT: 'shellInput',
+            SHELL_OUTPUT: 'shellOutput',
+            PKG_LIST: 'pkgList',
+            INSTALL_PROGRESS: 'installProgress',
+            PROGRESS_FILL: 'progressFill',
+            FILE_LIST: 'fileList',
+            CURRENT_PATH: 'currentPath',
+            SCREEN_PREVIEW: 'screenPreview',
+            AUTO_REFRESH: 'autoRefresh',
+            QUICK_APPS_GRID: 'quickAppsGrid',
+            LAUNCH_PACKAGE: 'launchPackage',
+            LOGCAT_BOX: 'logcatBox',
+            LOGCAT_CONTENT: 'logcatContent',
+            APK_FILE: 'apkFile',
+            UPLOAD_FILE: 'uploadFile',
+        };
+
+        // ========== 路径工具类 ==========
+        const PathUtils = {
+            /**
+             * 规范化路径
+             * @param {string} path - 原始路径
+             * @returns {string} 规范化后的路径
+             */
+            normalize(path) {
+                if (!path || typeof path !== 'string') return '/sdcard';
+                // 移除多余的斜杠和空白
+                let normalized = path.trim().replace(/\/+/g, '/');
+                // 确保以 / 开头
+                if (!normalized.startsWith('/')) normalized = '/' + normalized;
+                // 移除末尾斜杠（除非是根目录）
+                if (normalized !== '/' && normalized.endsWith('/')) {
+                    normalized = normalized.slice(0, -1);
+                }
+                return normalized;
+            },
+
+            /**
+             * 获取父目录路径
+             * @param {string} path - 当前路径
+             * @returns {string} 父目录路径
+             */
+            parent(path) {
+                const normalized = this.normalize(path);
+                if (normalized === '/' || normalized === '') return '/';
+                const parts = normalized.split('/').filter(Boolean);
+                if (parts.length <= 1) return '/';
+                parts.pop();
+                return '/' + parts.join('/');
+            },
+
+            /**
+             * 连接路径片段
+             * @param {...string} parts - 路径片段
+             * @returns {string} 连接后的路径
+             */
+            join(...parts) {
+                return this.normalize(parts.filter(Boolean).join('/'));
+            },
+
+            /**
+             * 检查是否是根目录
+             * @param {string} path - 路径
+             * @returns {boolean}
+             */
+            isRoot(path) {
+                return this.normalize(path) === '/';
+            }
+        };
+
+        // ========== Toast 通知系统 ==========
+        const Toast = {
+            /**
+             * 显示 Toast 通知
+             * @param {string} message - 消息内容
+             * @param {string} type - 类型: success, error, info, warning
+             * @param {number} duration - 显示时长(ms)
+             */
+            show(message, type = 'info', duration = CONFIG.TOAST_DURATION) {
+                const container = document.getElementById(DOM_IDS.TOAST_CONTAINER);
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = 'toast ' + type;
+                toast.textContent = message;
+                
+                container.appendChild(toast);
+
+                // 自动移除
+                setTimeout(() => {
+                    toast.style.animation = 'toastOut 0.3s ease forwards';
+                    setTimeout(() => {
+                        if (toast.parentNode) toast.parentNode.removeChild(toast);
+                    }, 300);
+                }, duration);
+            },
+
+            success(message) { this.show(message, 'success'); },
+            error(message) { this.show(message, 'error', 5000); },
+            info(message) { this.show(message, 'info'); },
+            warning(message) { this.show(message, 'warning', 4000); }
+        };
+
+        // ========== 确认对话框 ==========
+        const Confirm = {
+            /**
+             * 显示确认对话框
+             * @param {string} title - 标题
+             * @param {string} message - 消息
+             * @returns {Promise<boolean>}
+             */
+            show(title, message) {
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'confirm-modal';
+                    overlay.innerHTML = `
+                        <div class="confirm-dialog">
+                            <h3>${this._escapeHtml(title)}</h3>
+                            <p>${this._escapeHtml(message)}</p>
+                            <div class="btn-group">
+                                <button class="btn btn-secondary" data-action="confirm-cancel">取消</button>
+                                <button class="btn btn-danger" data-action="confirm-ok">确定</button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.appendChild(overlay);
+
+                    // 事件处理
+                    overlay.addEventListener('click', (e) => {
+                        const action = e.target.dataset.action;
+                        if (action === 'confirm-cancel' || action === 'confirm-ok') {
+                            document.body.removeChild(overlay);
+                            resolve(action === 'confirm-ok');
+                        }
+                    });
+
+                    // ESC 取消
+                    const escHandler = (e) => {
+                        if (e.key === 'Escape') {
+                            document.removeEventListener('keydown', escHandler);
+                            document.body.removeChild(overlay);
+                            resolve(false);
+                        }
+                    };
+                    document.addEventListener('keydown', escHandler);
+                });
+            },
+
+            _escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        };
+
+        // ========== 统一错误处理 ==========
+        const ErrorHandler = {
+            /**
+             * 处理 API 错误
+             * @param {Error} error - 错误对象
+             * @param {string} context - 上下文描述
+             */
+            handle(error, context = '操作') {
+                console.error(`[${context}]`, error);
+                Toast.error(`${context}失败: ${error.message}`);
+                return false;
+            },
+
+            /**
+             * 安全执行异步函数
+             * @param {Function} fn - 异步函数
+             * @param {string} context - 上下文描述
+             * @returns {Promise<any>}
+             */
+            async safe(fn, context = '操作') {
+                try {
+                    return await fn();
+                } catch (error) {
+                    return this.handle(error, context);
+                }
+            }
+        };
+
+        // ========== XSS 防护工具 ==========
+        const Security = {
+            /**
+             * HTML 实体转义
+             * @param {string} text - 原始文本
+             * @returns {string} 转义后的文本
+             */
+            escapeHtml(text) {
+                if (text === null || text === undefined) return '';
+                const div = document.createElement('div');
+                div.textContent = String(text);
+                return div.innerHTML;
+            },
+
+            /**
+             * 验证包名格式
+             * @param {string} pkg - 包名
+             * @returns {boolean}
+             */
+            isValidPackageName(pkg) {
+                return /^[a-zA-Z][a-zA-Z0-9_.-]*$/.test(pkg);
+            }
+        };
+
+        // ========== 应用状态 ==========
+        const AppState = {
+            connected: false,
+            currentPath: '/sdcard',
+            screenshotData: null,
+            screenWidth: 1080,
+            screenHeight: 1920,
+            liveInterval: null
+        };
+
+        // ========== API 客户端 ==========
+        const API = {
+            /**
+             * 发送 GET 请求
+             */
+            async get(endpoint, params = {}) {
+                const query = new URLSearchParams(params).toString();
+                const url = query ? `${CONFIG.API_BASE}${endpoint}?${query}` : `${CONFIG.API_BASE}${endpoint}`;
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                return resp.json();
+            },
+
+            /**
+             * 发送 POST 请求
+             */
+            async post(endpoint, data = {}, isJson = true) {
+                const options = {
+                    method: 'POST',
+                    headers: {}
+                };
+                if (isJson) {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(data);
+                } else {
+                    options.body = data;
+                }
+                const resp = await fetch(`${CONFIG.API_BASE}${endpoint}`, options);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                return resp.json();
+            }
+        };
+
+        // ========== 核心功能 ==========
+
+        /**
+         * 更新连接状态显示
+         */
+        function updateStatus(text, type = '') {
+            const dot = document.getElementById(DOM_IDS.STATUS_DOT);
+            const textEl = document.getElementById(DOM_IDS.STATUS_TEXT);
+            if (dot) {
+                dot.className = 'status-dot ' + (type || '');
+            }
+            if (textEl) {
+                textEl.textContent = text;
+            }
+        }
+
+        /**
+         * 添加日志输出
+         */
+        function log(text, type = '') {
+            const output = document.getElementById(DOM_IDS.SHELL_OUTPUT);
+            if (!output) return;
+
+            const line = document.createElement('div');
+            line.className = 'output-line' + (type ? ' ' + type : '');
+            line.textContent = text;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        /**
+         * 格式化文件大小
+         */
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        /**
+         * 检查服务器连接
+         */
+        async function checkServer() {
+            try {
+                const data = await API.get('/api/devices');
+                AppState.connected = true;
+                updateStatus('服务器已连接', 'connected');
+                refreshDevices();
+                getScreenSize();
+            } catch (e) {
+                updateStatus('服务器未连接 - 请先运行 server.py', 'error');
+                log('错误: ' + e.message);
+                log('提示: 打开命令提示符，运行: python server.py');
+            }
+        }
+
+        /**
+         * 获取屏幕分辨率
+         */
+        async function getScreenSize() {
+            try {
+                const info = await API.get('/api/device-info');
+                if (info.screen_size) {
+                    const parts = info.screen_size.split('x');
+                    if (parts.length === 2) {
+                        AppState.screenWidth = parseInt(parts[0]) || 1080;
+                        AppState.screenHeight = parseInt(parts[1]) || 1920;
+                        log('屏幕分辨率: ' + info.screen_size);
+                    }
+                }
+            } catch(e) {}
+        }
+
+        /**
+         * 刷新设备信息
+         */
+        async function refreshDevices() {
+            try {
+                const data = await API.get('/api/devices');
+                if (data.devices && data.devices.length > 0) {
+                    const dev = data.devices[0];
+                    log('找到设备: ' + dev.serial + ' (' + dev.state + ')');
+                    
+                    const info = await API.get('/api/device-info');
+                    
+                    const setText = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = value || '-';
+                    };
+                    
+                    setText(DOM_IDS.DEV_MODEL, info.model);
+                    setText(DOM_IDS.DEV_VERSION, info.android_version);
+                    setText(DOM_IDS.DEV_BRAND, info.brand);
+                    setText(DOM_IDS.DEV_SERIAL, info.serial);
+                    
+                    const card = document.getElementById(DOM_IDS.DEVICE_CARD);
+                    if (card) card.style.display = 'block';
+                    
+                    updateStatus('已连接 - ' + dev.serial, 'connected');
+                } else {
+                    log('未找到设备，请确保USB已连接', 'error');
+                    updateStatus('未找到设备', '');
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '获取设备信息');
+            }
+        }
+
+        /**
+         * 执行 Shell 命令
+         */
+        async function execShell() {
+            const input = document.getElementById(DOM_IDS.SHELL_INPUT);
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            
+            input.value = '';
+            log(cmd);
+            
+            try {
+                const data = await API.get('/api/shell', { cmd });
+                if (data.output) {
+                    data.output.split('\n').forEach(l => log(l));
+                } else if (data.error) {
+                    log('错误: ' + data.error, 'error');
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '执行命令');
+            }
+        }
+
+        /**
+         * 切换标签页
+         */
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            const tabBtn = document.querySelector(`[data-tab="${name}"]`);
+            const tabContent = document.getElementById('tab-' + name);
+            
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabContent) tabContent.classList.add('active');
+            
+            // 切换到文件管理时刷新
+            if (name === 'files') refreshFiles();
+        }
+
+        /**
+         * 触发文件选择
+         */
+        function triggerApkFile() {
+            document.getElementById(DOM_IDS.APK_FILE).click();
+        }
+
+        /**
+         * 安装 APK
+         */
+        async function doInstallApk(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            log('开始安装: ' + file.name);
+            
+            const progress = document.getElementById(DOM_IDS.INSTALL_PROGRESS);
+            const progressFill = document.getElementById(DOM_IDS.PROGRESS_FILL);
+            
+            if (progress) progress.style.display = 'block';
+            if (progressFill) progressFill.style.width = '50%';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const data = await API.post('/api/install-apk', formData, false);
+                
+                if (progressFill) progressFill.style.width = '100%';
+                
+                if (data.success) {
+                    Toast.success('安装成功: ' + file.name);
+                    log('安装成功: ' + file.name, 'success');
+                } else {
+                    Toast.error('安装失败: ' + (data.output || data.error));
+                    log('安装失败: ' + (data.output || data.error), 'error');
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '安装APK');
+            }
+            
+            if (progress) progress.style.display = 'none';
+            input.value = '';
+        }
+
+        /**
+         * 获取已安装应用列表
+         */
+        async function listPackages() {
+            const list = document.getElementById(DOM_IDS.PKG_LIST);
+            if (!list) return;
+            
+            list.innerHTML = '<p class="loading">正在获取...</p>';
+            
+            try {
+                const data = await API.get('/api/packages');
+                
+                if (data.packages && data.packages.length > 0) {
+                    const fragment = document.createDocumentFragment();
+                    
+                    data.packages.forEach(pkg => {
+                        const item = document.createElement('div');
+                        item.className = 'pkg-item';
+                        
+                        const icon = document.createElement('div');
+                        icon.className = 'pkg-icon';
+                        icon.textContent = 'A';
+                        
+                        const name = document.createElement('div');
+                        name.className = 'pkg-name';
+                        name.textContent = pkg; // XSS 安全
+                        
+                        const actions = document.createElement('div');
+                        actions.className = 'pkg-actions';
+                        
+                        const uninstallBtn = document.createElement('button');
+                        uninstallBtn.className = 'btn-uninstall';
+                        uninstallBtn.textContent = '卸载';
+                        uninstallBtn.dataset.package = pkg;
+                        uninstallBtn.dataset.action = 'uninstall-pkg';
+                        
+                        actions.appendChild(uninstallBtn);
+                        item.appendChild(icon);
+                        item.appendChild(name);
+                        item.appendChild(actions);
+                        fragment.appendChild(item);
+                    });
+                    
+                    list.innerHTML = '';
+                    list.appendChild(fragment);
+                } else {
+                    list.innerHTML = '<p>未找到已安装应用</p>';
+                }
+            } catch (e) {
+                list.innerHTML = `<p class="error">获取失败: ${Security.escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        /**
+         * 卸载应用
+         */
+        async function uninstallPkg(pkg) {
+            if (!await Confirm.show('卸载确认', `确定要卸载 ${pkg} 吗?`)) return;
+            
+            try {
+                const data = await API.post('/api/uninstall', { package: pkg });
+                if (data.success) {
+                    Toast.success('卸载成功');
+                    log('卸载成功: ' + pkg, 'success');
+                    listPackages();
+                } else {
+                    Toast.error('卸载失败');
+                    log('卸载失败: ' + (data.output || '未知错误'), 'error');
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '卸载应用');
+            }
+        }
+
+        /**
+         * 刷新文件列表
+         */
+        async function refreshFiles() {
+            const list = document.getElementById(DOM_IDS.FILE_LIST);
+            if (!list) return;
+            
+            list.innerHTML = '<p class="loading">正在获取...</p>';
+            
+            try {
+                const data = await API.get('/api/files', { path: AppState.currentPath });
+                
+                const pathEl = document.getElementById(DOM_IDS.CURRENT_PATH);
+                if (pathEl) pathEl.textContent = data.path || AppState.currentPath;
+                
+                if (data.files && data.files.length > 0) {
+                    const fragment = document.createDocumentFragment();
+                    
+                    data.files.forEach(f => {
+                        const item = document.createElement('div');
+                        item.className = 'file-item';
+                        
+                        if (f.is_dir) {
+                            item.dataset.action = 'navigate';
+                            item.dataset.folder = f.name;
+                            item.style.cursor = 'pointer';
+                        }
+                        
+                        const icon = document.createElement('div');
+                        icon.className = 'file-icon';
+                        icon.textContent = f.is_dir ? '[DIR]' : '[FILE]';
+                        
+                        const name = document.createElement('div');
+                        name.className = 'file-name';
+                        name.textContent = f.name; // XSS 安全
+                        
+                        const size = document.createElement('small');
+                        size.style.color = '#888';
+                        size.textContent = formatSize(f.size);
+                        
+                        item.appendChild(icon);
+                        item.appendChild(name);
+                        item.appendChild(size);
+                        fragment.appendChild(item);
+                    });
+                    
+                    list.innerHTML = '';
+                    list.appendChild(fragment);
+                } else {
+                    list.innerHTML = '<p>目录为空</p>';
+                }
+            } catch (e) {
+                list.innerHTML = `<p class="error">获取失败: ${Security.escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        /**
+         * 导航到目录
+         */
+        function navigateToFolder(folder) {
+            AppState.currentPath = PathUtils.join(AppState.currentPath, folder);
+            refreshFiles();
+        }
+
+        /**
+         * 返回上级目录
+         */
+        function goBack() {
+            AppState.currentPath = PathUtils.parent(AppState.currentPath);
+            refreshFiles();
+        }
+
+        /**
+         * 触发文件上传
+         */
+        function triggerUploadFile() {
+            document.getElementById(DOM_IDS.UPLOAD_FILE).click();
+        }
+
+        /**
+         * 上传文件
+         */
+        async function doUploadFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            log('上传: ' + file.name + ' -> ' + AppState.currentPath);
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const data = await API.post('/api/upload-file', formData, false);
+                
+                if (data.success) {
+                    Toast.success('上传成功');
+                    log('上传成功', 'success');
+                    refreshFiles();
+                } else {
+                    Toast.error('上传失败: ' + (data.output || data.error));
+                    log('上传失败: ' + (data.output || data.error), 'error');
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '上传文件');
+            }
+            
+            input.value = '';
+        }
+
+        /**
+         * 截图
+         */
+        async function takeScreenshot() {
+            const preview = document.getElementById(DOM_IDS.SCREEN_PREVIEW);
+            if (!preview) return;
+            
+            preview.innerHTML = '<p class="loading">正在截图...</p>';
+            
+            try {
+                const data = await API.get('/api/screenshot');
+                
+                if (data.image) {
+                    AppState.screenshotData = 'data:image/png;base64,' + data.image;
+                    preview.innerHTML = `<img src="${AppState.screenshotData}" alt="screen" data-action="screen-click" style="cursor:crosshair">`;
+                    log('截图成功', 'success');
+                } else {
+                    preview.innerHTML = '<p class="error">截图失败</p>';
+                    log('截图失败', 'error');
+                }
+            } catch(e) {
+                preview.innerHTML = `<p class="error">截图失败: ${Security.escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        /**
+         * 开始实时预览
+         */
+        function startLivePreview() {
+            takeScreenshot();
+            
+            if (document.getElementById(DOM_IDS.AUTO_REFRESH)?.checked) {
+                if (AppState.liveInterval) clearInterval(AppState.liveInterval);
+                AppState.liveInterval = setInterval(takeScreenshot, CONFIG.AUTO_REFRESH_INTERVAL);
+                log('开始实时预览 (每' + (CONFIG.AUTO_REFRESH_INTERVAL / 1000) + '秒)');
+            }
+        }
+
+        /**
+         * 停止实时预览
+         */
+        function stopLivePreview() {
+            if (AppState.liveInterval) {
+                clearInterval(AppState.liveInterval);
+                AppState.liveInterval = null;
+            }
+            log('停止预览');
+        }
+
+        /**
+         * 切换自动刷新
+         */
+        function toggleAutoRefresh() {
+            const checked = document.getElementById(DOM_IDS.AUTO_REFRESH)?.checked;
+            if (checked) {
+                takeScreenshot();
+                AppState.liveInterval = setInterval(takeScreenshot, CONFIG.AUTO_REFRESH_INTERVAL);
+                log('自动刷新已开启 (' + (CONFIG.AUTO_REFRESH_INTERVAL / 1000) + '秒)');
+            } else {
+                stopLivePreview();
+            }
+        }
+
+        /**
+         * 处理屏幕点击
+         */
+        function handleScreenClick(event) {
+            const img = event.target;
+            const rect = img.getBoundingClientRect();
+            const x = Math.round((event.clientX - rect.left) / rect.width * AppState.screenWidth);
+            const y = Math.round((event.clientY - rect.top) / rect.height * AppState.screenHeight);
+            tapScreen(x, y);
+        }
+
+        /**
+         * 点击屏幕坐标
+         */
+        async function tapScreen(x, y) {
+            log('点击: (' + x + ', ' + y + ')');
+            
+            try {
+                const data = await API.get('/api/shell', { cmd: 'input tap ' + x + ' ' + y });
+                if (data.success) {
+                    log('点击成功', 'success');
+                } else {
+                    log('点击失败', 'error');
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '点击屏幕');
+            }
+        }
+
+        /**
+         * 下载截图
+         */
+        function downloadScreenshot() {
+            if (!AppState.screenshotData) {
+                Toast.warning('请先截图');
+                return;
+            }
+            
+            const a = document.createElement('a');
+            a.download = 'screenshot_' + Date.now() + '.png';
+            a.href = AppState.screenshotData;
+            a.click();
+        }
+
+        /**
+         * 设备控制
+         */
+        async function controlDevice(action) {
+            const messages = {
+                reboot: '重启',
+                recovery: '重启到Recovery',
+                bootloader: '重启到Bootloader',
+                shutdown: '关机'
+            };
+            
+            const msg = messages[action] || action;
+            
+            if (!await Confirm.show('设备控制', '确定要' + msg + '吗?')) return;
+            
+            try {
+                const data = await API.post('/api/control', { action });
+                if (data.success) {
+                    Toast.success(msg + '命令已发送');
+                    log(msg + '命令已发送', 'success');
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '设备控制');
+            }
+        }
+
+        /**
+         * 查看日志
+         */
+        async function showLogcat() {
+            const box = document.getElementById(DOM_IDS.LOGCAT_BOX);
+            const content = document.getElementById(DOM_IDS.LOGCAT_CONTENT);
+            
+            if (!box || !content) return;
+            
+            box.style.display = 'block';
+            content.textContent = '正在获取...';
+            
+            try {
+                const data = await API.get('/api/logcat', { lines: 100 });
+                content.textContent = (data.logs && data.logs.length > 0) 
+                    ? data.logs.join('\n') 
+                    : '没有日志';
+            } catch (e) {
+                content.textContent = '获取失败: ' + e.message;
+            }
+        }
+
+        /**
+         * 加载启动应用列表
+         */
+        async function loadLaunchApps() {
+            const grid = document.getElementById(DOM_IDS.QUICK_APPS_GRID);
+            if (!grid) return;
+            
+            grid.innerHTML = '<p class="loading">正在获取...</p>';
+            
+            try {
+                const data = await API.get('/api/packages');
+                
+                if (data.packages && data.packages.length > 0) {
+                    const fragment = document.createDocumentFragment();
+                    
+                    data.packages.slice(0, CONFIG.MAX_PACKAGES_DISPLAY).forEach(pkg => {
+                        const btn = document.createElement('div');
+                        btn.className = 'quick-app-btn';
+                        btn.dataset.action = 'launch-app-by-pkg';
+                        btn.dataset.package = pkg;
+                        
+                        const name = pkg.split('.').pop() || pkg;
+                        const iconUrl = `${CONFIG.API_BASE}/api/app-icon?pkg=${encodeURIComponent(pkg)}`;
+                        
+                        btn.innerHTML = `
+                            <img class="app-icon-img" src="${iconUrl}" onerror="this.style.display='none'" loading="lazy">
+                            <div class="app-name">${Security.escapeHtml(name)}</div>
+                            <div class="app-package">${Security.escapeHtml(pkg.substring(0, 30))}...</div>
+                        `;
+                        
+                        fragment.appendChild(btn);
+                    });
+                    
+                    grid.innerHTML = '';
+                    grid.appendChild(fragment);
+                } else {
+                    grid.innerHTML = '<p>未找到应用</p>';
+                }
+            } catch (e) {
+                grid.innerHTML = `<p class="error">获取失败: ${Security.escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        /**
+         * 通过包名启动应用
+         */
+        async function launchAppByPkg(pkg) {
+            if (!Security.isValidPackageName(pkg)) {
+                Toast.error('无效的包名');
+                return;
+            }
+            
+            log('启动: ' + pkg);
+            
+            try {
+                const cmd = 'monkey -p ' + pkg + ' -c "android.intent.category.LAUNCHER" 1 2>&1';
+                const data = await API.get('/api/shell', { cmd });
+                
+                if (data.output && (data.output.includes('Events injected') || data.output.includes('Starting'))) {
+                    Toast.success('已启动');
+                    log('已启动: ' + pkg, 'success');
+                } else {
+                    log('结果: ' + (data.output || '未知结果'));
+                }
+            } catch (e) {
+                ErrorHandler.handle(e, '启动应用');
+            }
+        }
+
+        /**
+         * 启动应用（自定义包名）
+         */
+        async function launchApp() {
+            const pkg = document.getElementById(DOM_IDS.LAUNCH_PACKAGE)?.value.trim();
+            if (!pkg) {
+                Toast.warning('请输入包名');
+                return;
+            }
+            
+            await launchAppByPkg(pkg);
+            
+            const input = document.getElementById(DOM_IDS.LAUNCH_PACKAGE);
+            if (input) input.value = '';
+        }
+
+        /**
+         * 同意免责声明
+         */
+        function agreeDisclaimer() {
+            const modal = document.getElementById(DOM_IDS.DISCLAIMER_MODAL);
+            const main = document.getElementById(DOM_IDS.MAIN_CONTAINER);
+            
+            if (modal) modal.style.display = 'none';
+            if (main) main.style.display = 'block';
+            
+            checkServer();
+        }
+
+        // ========== 事件委托绑定 ==========
+        function bindEvents() {
+            // Shell 输入框回车事件
+            const shellInput = document.getElementById(DOM_IDS.SHELL_INPUT);
+            if (shellInput) {
+                shellInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') execShell();
+                });
+            }
+
+            // 自动刷新复选框
+            const autoRefresh = document.getElementById(DOM_IDS.AUTO_REFRESH);
+            if (autoRefresh) {
+                autoRefresh.addEventListener('change', toggleAutoRefresh);
+            }
+
+            // 文件选择器
+            const apkFile = document.getElementById(DOM_IDS.APK_FILE);
+            if (apkFile) {
+                apkFile.addEventListener('change', (e) => doInstallApk(e.target));
+            }
+
+            const uploadFile = document.getElementById(DOM_IDS.UPLOAD_FILE);
+            if (uploadFile) {
+                uploadFile.addEventListener('change', (e) => doUploadFile(e.target));
+            }
+
+            // 全局事件委托
+            document.addEventListener('click', async (e) => {
+                const target = e.target;
+                const action = target.dataset.action;
+
+                if (!action) return;
+
+                switch (action) {
+                    // 免责声明
+                    case 'agree-disclaimer':
+                        agreeDisclaimer();
+                        break;
+                    
+                    // 连接与设备
+                    case 'connect':
+                        checkServer();
+                        break;
+                    case 'refresh-devices':
+                        refreshDevices();
+                        break;
+                    
+                    // Shell
+                    case 'exec-shell':
+                        execShell();
+                        break;
+                    
+                    // APK管理
+                    case 'install-apk':
+                        triggerApkFile();
+                        break;
+                    case 'list-packages':
+                        listPackages();
+                        break;
+                    case 'uninstall-pkg':
+                        uninstallPkg(target.dataset.package);
+                        break;
+                    
+                    // 文件管理
+                    case 'refresh-files':
+                        refreshFiles();
+                        break;
+                    case 'go-back':
+                        goBack();
+                        break;
+                    case 'navigate':
+                        navigateToFolder(target.dataset.folder);
+                        break;
+                    case 'upload-file':
+                        triggerUploadFile();
+                        break;
+                    
+                    // 屏幕控制
+                    case 'start-preview':
+                        startLivePreview();
+                        break;
+                    case 'stop-preview':
+                        stopLivePreview();
+                        break;
+                    case 'download-screenshot':
+                        downloadScreenshot();
+                        break;
+                    case 'screen-click':
+                        handleScreenClick(e);
+                        break;
+                    
+                    // 启动应用
+                    case 'load-launch-apps':
+                        loadLaunchApps();
+                        break;
+                    case 'launch-app-by-pkg':
+                        launchAppByPkg(target.dataset.package);
+                        break;
+                    case 'launch-app':
+                        launchApp();
+                        break;
+                    
+                    // 设备控制
+                    case 'control-device':
+                        controlDevice(target.dataset.param);
+                        break;
+                    case 'show-logcat':
+                        showLogcat();
+                        break;
+                }
+            });
+
+            // 标签页切换
+            document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+        }
+
+        // ========== 初始化 ==========
+        window.addEventListener('DOMContentLoaded', () => {
+            // 显示免责声明
+            const modal = document.getElementById(DOM_IDS.DISCLAIMER_MODAL);
+            const main = document.getElementById(DOM_IDS.MAIN_CONTAINER);
+            if (modal) modal.style.display = 'flex';
+            if (main) main.style.display = 'none';
+
+            // 绑定事件
+            bindEvents();
+        });
+
+    })();
+    </script>
+</body>
+</html>

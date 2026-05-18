@@ -1,0 +1,481 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 1200px;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* 头部样式 */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.logo i {
+    font-size: 48px;
+}
+
+.logo h1 {
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.subtitle {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+/* 连接状态栏 */
+.connection-bar {
+    background: #f8f9fa;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+}
+
+#connection-icon {
+    font-size: 24px;
+    color: #dc3545;
+}
+
+#connection-icon.connected {
+    color: #28a745;
+}
+
+#connection-text {
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-connect {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-connect:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-connect:active {
+    transform: translateY(0);
+}
+
+/* 设备信息 */
+.device-info {
+    background: #e7f3ff;
+    padding: 20px 30px;
+    border-bottom: 2px solid #b8daff;
+}
+
+.device-info h3 {
+    color: #004085;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.info-item .label {
+    font-weight: 600;
+    color: #495057;
+    margin-right: 8px;
+}
+
+.info-item .value {
+    color: #212529;
+    font-family: 'Courier New', monospace;
+}
+
+/* 标签页 */
+.tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    color: #6c757d;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #667eea;
+    border-bottom: 3px solid #667eea;
+}
+
+/* 标签页内容 */
+.tab-content {
+    padding: 30px;
+    min-height: 500px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Shell命令 */
+.shell-container {
+    background: #212529;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.shell-output {
+    padding: 20px;
+    min-height: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.welcome-msg {
+    text-align: center;
+    color: #6c757d;
+    padding-top: 150px;
+}
+
+.welcome-msg p:first-child {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #00ff00;
+}
+
+.shell-input {
+    display: flex;
+    background: #343a40;
+    padding: 15px;
+    gap: 10px;
+}
+
+.shell-input input {
+    flex: 1;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    background: #495057;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}
+
+.shell-input input::placeholder {
+    color: #6c757d;
+}
+
+.shell-input button {
+    padding: 12px 30px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.shell-input button:hover {
+    background: #218838;
+}
+
+/* APK管理 */
+.apk-container,
+.file-container,
+.screen-container,
+.device-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.apk-actions,
+.file-actions,
+.screen-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    padding: 12px 25px;
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-action:hover {
+    background: #667eea;
+    color: white;
+}
+
+.apk-list,
+.file-list {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.hint {
+    text-align: center;
+    color: #6c757d;
+    padding-top: 100px;
+}
+
+/* 文件管理 */
+.file-path {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-back {
+    margin-left: auto;
+    padding: 8px 15px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* 屏幕截图 */
+.screen-preview {
+    background: #212529;
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.screen-preview img {
+    max-width: 100%;
+    max-height: 500px;
+    border-radius: 8px;
+}
+
+/* 设备控制 */
+.control-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.btn-control {
+    padding: 20px;
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.btn-control i {
+    font-size: 32px;
+    color: #667eea;
+}
+
+.btn-control:hover {
+    border-color: #667eea;
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.logcat-output {
+    background: #212529;
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.logcat-output pre {
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.btn-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 8px 15px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* 底部 */
+.footer {
+    background: #f8f9fa;
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    border-top: 2px solid #dee2e6;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .container {
+        border-radius: 0;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .logo h1 {
+        font-size: 28px;
+    }
+    
+    .connection-bar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .tabs {
+        flex-direction: column;
+    }
+    
+    .tab-btn {
+        justify-content: flex-start;
+    }
+    
+    .control-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
