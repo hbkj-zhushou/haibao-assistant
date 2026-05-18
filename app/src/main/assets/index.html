@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>海宝车机助手 - 本地模式</title>
+    <title>海宝车机助手</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -423,7 +423,7 @@
 
         // ========== 配置常量 ==========
         const CONFIG = {
-            API_BASE: 'http://127.0.0.1:8888',
+            API_BASE: 'http://127.0.0.1:8888', // Android通过ADB端口转发: adb forward tcp:8888 tcp:8888
             AUTO_REFRESH_INTERVAL: 2000,
             SCREENSHOT_RETRY: 3,
             MAX_PACKAGES_DISPLAY: 50,
